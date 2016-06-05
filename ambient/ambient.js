@@ -9,8 +9,20 @@ specified light or sound level trigger is met.
 
 var tessel = require('tessel');
 var ambientlib = require('ambient-attx4');
-var request = require('request');
 var ambient = ambientlib.use(tessel.port['A']);
+
+let date = new Date();
+
+let index = 'tessel-ambient-' +
+  (date.getFullYear().toString()).substr(2) + '.' +
+  ("0" + (date.getMonth() + 1).toString()).substr(-2) + '.' +
+  ("0" + date.getDate().toString()).substr(-2);
+
+let es = require('elasticsearch');
+let client = new es.Client({
+  host: 'http://10.13.37.134:9200',
+  log: 'trace'
+});
 
 ambient.on('ready', function () {
  // Get points of light and sound data.
@@ -22,17 +34,22 @@ ambient.on('ready', function () {
 
         let log = {
           'light': lightdata.toFixed(8),
-          'sound': sounddata.toFixed(8)
+          'sound': sounddata.toFixed(8),
+          'timestamp': new Date().toISOString()
         };
 
-        request.post('http://10.13.37.134:9200/ambient', log, function (err, response, body) {
-          if (err) console.error(err); return;
+        client.create({
+          index: index,
+          type: 'ambient',
+          body: log
+        }, function (error, response) {
+          if (error) return console.error(error);
           console.log(response);
         });
 
       });
     });
-  }, 500); // The readings will happen every .5 seconds
+  }, 1000); // The readings will happen every 1 seconds
 });
 
 ambient.on('error', function (err) {

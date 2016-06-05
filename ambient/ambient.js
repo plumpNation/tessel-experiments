@@ -11,6 +11,8 @@ var tessel = require('tessel');
 var ambientlib = require('ambient-attx4');
 var ambient = ambientlib.use(tessel.port['A']);
 
+let config = require('config.json');
+
 let date = new Date();
 
 let index = 'tessel-ambient-' +
@@ -20,7 +22,7 @@ let index = 'tessel-ambient-' +
 
 let es = require('elasticsearch');
 let client = new es.Client({
-  host: 'http://10.13.37.134:9200',
+  host: config.db,
   log: 'trace'
 });
 
